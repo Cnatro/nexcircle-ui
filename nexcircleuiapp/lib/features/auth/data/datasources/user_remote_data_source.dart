@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nexcircleuiapp/core/utils/shared_preferences.dart';
 import '../models/user_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class UserRemoteDataSource {
   final String baseUrl;
 
-  UserRemoteDataSource({this.baseUrl = 'https://nexcircleapp.onrender.com'});
+  UserRemoteDataSource({String? baseUrl})
+      : baseUrl = baseUrl ?? dotenv.env['API_URL'] ?? '';
 
   Future<UserModel?> login(String username, String password) async {
     final response = await http.post(
@@ -37,7 +39,8 @@ class UserRemoteDataSource {
         'password': password,
       }),
     );
-    if (response.statusCode == 201) {
+    // tạm thời statusCode là 200
+    if (response.statusCode == 200) {
       return UserModel.fromJson(jsonDecode(response.body)['data']);
     }
     return null;
