@@ -3,8 +3,9 @@ import 'package:nexcircleuiapp/features/auth/data/datasources/user_remote_data_s
 import 'package:nexcircleuiapp/features/auth/data/repositories/user_repository_impl.dart';
 import 'package:nexcircleuiapp/features/auth/domain/usecases/login_usecase.dart';
 import 'package:nexcircleuiapp/features/auth/presentation/pages/profile_page.dart';
+import 'package:nexcircleuiapp/features/contact/presentation/pages/contact_page.dart';
 import 'package:nexcircleuiapp/features/home/presentation/pages/settings_page.dart';
-import 'package:nexcircleuiapp/features/messaging/presentation/pages/chat_page.dart';
+import 'package:nexcircleuiapp/features/messaging/presentation/pages/friend_page.dart';
 import '../../../auth/domain/entities/user.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,8 +24,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _pages = [
-      ChatPage(currentUser: widget.currentUser),
-      ProfilePage(user: widget.currentUser),
+      FriendPage(currentUser: widget.currentUser),
+      ContactPage(currentUser: widget.currentUser),
       SettingsPage(
         loginUseCase: LoginUseCase(
           UserRepositoryImpl(remoteDataSource: UserRemoteDataSource()),
