@@ -3,6 +3,10 @@ import 'package:nexcircleuiapp/features/contact/data/datasources/contact_remote_
 import 'package:nexcircleuiapp/features/contact/data/repositories/contact_repository_impl.dart';
 import 'package:nexcircleuiapp/features/contact/domain/entities/friendship.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/get_friends_usecase.dart';
+import 'package:nexcircleuiapp/features/messaging/data/datasources/message_remote_datasource.dart';
+import 'package:nexcircleuiapp/features/messaging/data/repositories/message_repository_impl.dart';
+import 'package:nexcircleuiapp/features/messaging/domain/usecases/create_conversation_usecase.dart';
+import 'package:nexcircleuiapp/features/messaging/presentation/pages/chat_page.dart';
 
 import '../../../auth/domain/entities/user.dart';
 
@@ -17,8 +21,10 @@ class FriendPage extends StatefulWidget {
 
 class _FriendPageState extends State<FriendPage> {
   late GetFriendsUseCase getFriends;
+  late CreateConversationUseCase createConversation;
 
   List<Map<String, dynamic>> friendsUI = [];
+  List<Friendship> friends = [];
 
   int page = 0;
   final int size = 10;
@@ -29,8 +35,13 @@ class _FriendPageState extends State<FriendPage> {
   void initState() {
     super.initState();
 
-    final repo = ContactRepositoryImpl(ContactRemoteDataSource());
-    getFriends = GetFriendsUseCase(repo);
+    final repoContact = ContactRepositoryImpl(ContactRemoteDataSource());
+    final repoMessage = MessageRepositoryImpl(
+      remote: MessageRemoteDataSource(),
+    );
+
+    getFriends = GetFriendsUseCase(repoContact);
+    createConversation = CreateConversationUseCase(repoMessage);
 
     loadData();
   }
@@ -38,10 +49,9 @@ class _FriendPageState extends State<FriendPage> {
   void loadData() async {
     setState(() => isLoading = true);
 
-    final List<Friendship> friends = await getFriends(page: page, size: size);
+    final result = await getFriends(page: page, size: size);
 
-    /// 🔥 map API → UI giữ nguyên design
-    final mapped = friends.map((f) {
+    final mapped = result.map((f) {
       return {
         'name': f.fullName ?? 'Unknown',
         'lastMessage': 'Bạn bè',
@@ -51,6 +61,7 @@ class _FriendPageState extends State<FriendPage> {
     }).toList();
 
     setState(() {
+      friends = result;
       friendsUI = mapped;
       isLoading = false;
     });
@@ -94,10 +105,13 @@ class _FriendPageState extends State<FriendPage> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Xem bạn $name 👤'),
-                        backgroundColor: const Color(0xFF6366F1),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatPage(
+                          conversation: null,
+                          friend: friends[index],
+                        ),
                       ),
                     );
                   },
@@ -183,11 +197,22 @@ class _FriendPageState extends State<FriendPage> {
                           child: IconButton(
                             icon: const Icon(Icons.chat_bubble_outline),
                             color: const Color(0xFF6366F1),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Chat với $name 💬'),
-                                  backgroundColor: const Color(0xFF10B981),
+                            onPressed: () async {
+                              final friend = friends[index];
+
+                              final conversation = await createConversation(
+                                name: friend.fullName ?? 'Chat',
+                                type: 'private',
+                                userIds: [friend.userId],
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChatPage(
+                                    conversation: conversation,
+                                    friend: friend,
+                                  ),
                                 ),
                               );
                             },

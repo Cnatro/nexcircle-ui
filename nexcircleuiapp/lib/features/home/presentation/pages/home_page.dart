@@ -5,6 +5,7 @@ import 'package:nexcircleuiapp/features/auth/domain/usecases/login_usecase.dart'
 import 'package:nexcircleuiapp/features/auth/presentation/pages/profile_page.dart';
 import 'package:nexcircleuiapp/features/contact/presentation/pages/contact_page.dart';
 import 'package:nexcircleuiapp/features/home/presentation/pages/settings_page.dart';
+import 'package:nexcircleuiapp/features/messaging/presentation/pages/conversation_page.dart';
 import 'package:nexcircleuiapp/features/messaging/presentation/pages/friend_page.dart';
 import '../../../auth/domain/entities/user.dart';
 
@@ -24,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _pages = [
+      ConversationPage(),
       FriendPage(currentUser: widget.currentUser),
       ContactPage(currentUser: widget.currentUser),
       SettingsPage(
@@ -205,6 +207,27 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 label: 'Chats',
+              ),
+              BottomNavigationBarItem(
+                icon: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    size: 24,
+                    color: _currentIndex == 0
+                        ? const Color(0xFF6366F1)
+                        : Colors.grey.shade400,
+                  ),
+                ),
+                activeIcon: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: const Icon(
+                    Icons.chat_bubble,
+                    size: 24,
+                    color: Color(0xFF6366F1),
+                  ),
+                ),
+                label: 'Friends',
               ),
               BottomNavigationBarItem(
                 icon: Container(

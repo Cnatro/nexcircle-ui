@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nexcircleuiapp/core/utils/shared_preferences.dart';
+import 'package:nexcircleuiapp/features/auth/domain/entities/user.dart';
 import '../models/user_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -8,7 +9,7 @@ class UserRemoteDataSource {
   final String baseUrl;
 
   UserRemoteDataSource({String? baseUrl})
-      : baseUrl = baseUrl ?? dotenv.env['API_URL'] ?? '';
+    : baseUrl = baseUrl ?? dotenv.env['API_URL'] ?? '';
 
   Future<UserModel?> login(String username, String password) async {
     final response = await http.post(
@@ -20,7 +21,10 @@ class UserRemoteDataSource {
       await AppPreferences.saveToken(
         jsonDecode(response.body)['data']['accessToken'],
       );
-      return getCurrentUser();
+
+      UserModel user = await getCurrentUser() as UserModel;
+      await AppPreferences.saveUserId(user.id);
+      return user;
     }
     return null;
   }

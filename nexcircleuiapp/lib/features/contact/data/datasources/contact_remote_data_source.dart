@@ -113,7 +113,7 @@ class ContactRemoteDataSource {
     if (token == null) return;
 
     await http.post(
-      Uri.parse('$baseUrl/friend-requests/add'),
+      Uri.parse('$baseUrl/friend-requests'),
       headers: _headers(token),
       body: jsonEncode({'receiverId': recieverId, 'status': status}),
     );
