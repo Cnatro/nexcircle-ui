@@ -23,6 +23,7 @@ class UserRemoteDataSource {
       );
 
       UserModel user = await getCurrentUser() as UserModel;
+      await AppPreferences.saveUser(user);
       await AppPreferences.saveUserId(user.id);
       return user;
     }

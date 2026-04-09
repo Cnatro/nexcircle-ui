@@ -1,11 +1,19 @@
 class Message {
+  final String? id;
   final String senderId;
-  final String conversationId;
+  final String? receiverId;
+  final String? conversationId;
   final String content;
+  final String? messageType;
+  final String? parentMessageId;
 
   Message({
+    this.id,
     required this.senderId,
-    required this.conversationId,
+    this.conversationId,
     required this.content,
+    this.receiverId,
+    this.messageType,
+    this.parentMessageId,
   });
 }
