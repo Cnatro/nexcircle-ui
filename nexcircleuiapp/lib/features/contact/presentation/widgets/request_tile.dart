@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexcircleuiapp/core/utils/top_snackbar.dart';
 import 'package:nexcircleuiapp/features/contact/domain/entities/friend_request.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/accept_request_usecase.dart';
 
@@ -29,8 +30,10 @@ class RequestTile extends StatelessWidget {
 
               onAccepted();
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Đã chấp nhận lời mời")),
+              showTopBanner(
+                context,
+                'Đã chấp nhật lời mời!',
+                color: Colors.green,
               );
             },
           ),
