@@ -18,23 +18,27 @@ class MessageSocketDataSource {
 
   Stream<Message> onMessage() => _messageController.stream;
 
-  void connect({required String token, required String userId}) {
+  void connect({required String token, required String conversationId}) {
     _stompClient = StompClient(
       config: StompConfig.SockJS(
         url: socketUrl,
         onConnect: (StompFrame frame) {
-          print("WebSocket Connected");
+          print("WebSocket Connected ${conversationId ?? "no conversationId"}");
 
           _stompClient.subscribe(
-            destination: '/users/$userId/private/messages',
+            destination: '/user/private/messages/${conversationId}',
             callback: (frame) {
               if (frame.body != null) {
                 final data = jsonDecode(frame.body!);
-
+                print("Received message: $data");
                 final message = Message(
+                  id: data['id'],
                   senderId: data['senderId'],
                   content: data['content'],
                   conversationId: data['conversationId'],
+                  receiverId: data['receiverId'],
+                  messageType: data['messageType'],
+                  parentMessageId: data['parentMessageId'],
                 );
 
                 _messageController.add(message);
@@ -61,6 +65,9 @@ class MessageSocketDataSource {
       "senderId": message.senderId,
       "conversationId": message.conversationId,
       "content": message.content,
+      "receiverId": message.receiverId,
+      "messageType": message.messageType,
+      "parentMessageId": message.parentMessageId ?? "",
     });
 
     _stompClient.send(destination: '/messages/send/private', body: body);

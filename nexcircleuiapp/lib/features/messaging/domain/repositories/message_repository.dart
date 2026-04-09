@@ -1,3 +1,4 @@
+import 'package:nexcircleuiapp/features/messaging/data/models/message_model.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/conversation.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/message.dart';
 
@@ -13,5 +14,10 @@ abstract class MessageRepository {
     required String name,
     required String type,
     required List<String> userIds,
+  });
+  Future<List<MessageModel>> getMessages({
+    required String conversationId,
+    required int page,
+    required int size,
   });
 }
