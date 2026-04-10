@@ -132,7 +132,11 @@ class _ChatPageState extends State<ChatPage> {
       orElse: () => participants.first,
     );
 
-    return other.fullName ?? 'User';
+    return (other.fullName != null && other.fullName!.trim().isNotEmpty)
+        ? other.fullName!
+        : (other.userName != null && other.userName!.trim().isNotEmpty)
+        ? other.userName!
+        : 'User';
   }
 
   String getAvatar() {
