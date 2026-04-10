@@ -23,9 +23,4 @@ class Conversation {
   });
 
   bool get isGroup => type == "group";
-
-  String get displayName {
-    if (isGroup) return name ?? "Group";
-    return participants.isNotEmpty ? participants.first.fullName : "Unknown";
-  }
 }

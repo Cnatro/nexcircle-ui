@@ -215,6 +215,11 @@ class _ContactPageState extends State<ContactPage>
                                     user: users[i],
                                     sendFriendRequestUseCase:
                                         sendFriendRequestUseCase,
+                                    onRequestSent: () {
+                                      setState(() {
+                                        users.removeAt(i);
+                                      });
+                                    },
                                   ),
                                 ),
                               ),

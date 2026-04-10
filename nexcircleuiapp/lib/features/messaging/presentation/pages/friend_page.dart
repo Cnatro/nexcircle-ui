@@ -104,14 +104,18 @@ class _FriendPageState extends State<FriendPage> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {
+                  onTap: () async {
+                    final conversation = await createConversation(
+                      name: friends[index].fullName,
+                      type: 'private',
+                      userIds: [friends[index].userId],
+                      avatar: friends[index].avatarUrl,
+                    );
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ChatPage(
-                          conversation: null,
-                          friend: friends[index],
-                        ),
+                        builder: (_) => ChatPage(conversation: conversation),
                       ),
                     );
                   },
@@ -201,18 +205,17 @@ class _FriendPageState extends State<FriendPage> {
                               final friend = friends[index];
 
                               final conversation = await createConversation(
-                                name: friend.fullName ?? 'Chat',
+                                name: friend.fullName,
                                 type: 'private',
                                 userIds: [friend.userId],
+                                avatar: friend.avatarUrl,
                               );
 
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => ChatPage(
-                                    conversation: conversation,
-                                    friend: friend,
-                                  ),
+                                  builder: (_) =>
+                                      ChatPage(conversation: conversation),
                                 ),
                               );
                             },

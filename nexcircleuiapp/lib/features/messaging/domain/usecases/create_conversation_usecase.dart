@@ -10,7 +10,8 @@ class CreateConversationUseCase {
     required String name,
     required String type,
     required List<String> userIds,
+    String? avatar,
   }) {
-    return repo.createConversation(name: name, type: type, userIds: userIds);
+    return repo.createConversation(name: name, type: type, userIds: userIds, avatar: avatar);
   }
 }

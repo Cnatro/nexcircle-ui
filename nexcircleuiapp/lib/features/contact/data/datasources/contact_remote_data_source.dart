@@ -126,7 +126,7 @@ class ContactRemoteDataSource {
     await http.patch(
       Uri.parse('$baseUrl/friend-requests/accept'),
       headers: _headers(token),
-      body: jsonEncode({'id': id}),
+      body: jsonEncode({'id': id, 'status': 'accepted' }),
     );
   }
 }
