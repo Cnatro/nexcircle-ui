@@ -24,8 +24,9 @@ class MessageRepositoryImpl implements MessageRepository {
     required String name,
     required String type,
     required List<String> userIds,
+    String? avatar,
   }) {
-    return remote.createConversation(name: name, type: type, userIds: userIds);
+    return remote.createConversation(name: name, type: type, userIds: userIds, avatar: avatar);
   }
 
   @override

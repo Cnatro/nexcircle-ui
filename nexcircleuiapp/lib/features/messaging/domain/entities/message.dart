@@ -6,6 +6,7 @@ class Message {
   final String content;
   final String? messageType;
   final String? parentMessageId;
+  DateTime? createdAt;
 
   Message({
     this.id,
@@ -15,5 +16,6 @@ class Message {
     this.receiverId,
     this.messageType,
     this.parentMessageId,
+    this.createdAt,
   });
 }

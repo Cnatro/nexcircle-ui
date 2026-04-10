@@ -7,6 +7,7 @@ import 'package:nexcircleuiapp/features/auth/domain/entities/user.dart';
 import 'package:nexcircleuiapp/features/messaging/data/models/message_model.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/attachment.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/conversation.dart';
+import 'package:nexcircleuiapp/features/messaging/domain/entities/message.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/message_receipt.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/participant.dart';
 
@@ -67,6 +68,7 @@ class MessageRemoteDataSource {
     required List<String> userIds,
     required String type,
     required String name,
+    String? avatar,
   }) async {
     final token = await AppPreferences.getToken();
     if (token == null) throw Exception("Unauthorized");
@@ -74,7 +76,12 @@ class MessageRemoteDataSource {
     final res = await http.post(
       Uri.parse('$baseUrl/conversations'),
       headers: _headers(token),
-      body: jsonEncode({"userIds": userIds, "type": type, "name": name}),
+      body: jsonEncode({
+        "userIds": userIds,
+        "type": type,
+        "name": name,
+        "avatar": avatar ?? "",
+      }),
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -89,8 +96,32 @@ class MessageRemoteDataSource {
       type: data['type'] ?? "",
       name: data['name'] ?? "",
       avatar: data['avatar'] ?? "",
-      participants: [],
-      lastMessage: null,
+      participants: data['participants'] != null
+          ? (data['participants'] as List)
+                .map(
+                  (p) => Participant(
+                    id: p['id'],
+                    userId: p['userId'],
+                    fullName: p['fullName'],
+                    userName: p['userName'],
+                    avatarUrl: p['avatarUrl'],
+                    isOnline: p['isOnline'] ?? false,
+                  ),
+                )
+                .toList()
+          : [],
+      lastMessage: data["lastMessage"] != null
+          ? Message(
+              id: data['lastMessage']['id'] ?? "",
+              content: data['lastMessage']['content'] ?? "",
+              senderId: data['lastMessage']['senderId'] ?? "",
+              createdAt: data['lastMessage']['createdAt'] != null
+                  ? DateTime.parse(data['lastMessage']['createdAt'])
+                  : DateTime.now(),
+              messageType: data['lastMessage']['messageType'],
+              parentMessageId: data['lastMessage']['parentMessageId'],
+            )
+          : null,
       unreadCount: 0,
       mute: false,
     );

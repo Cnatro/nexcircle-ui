@@ -14,6 +14,7 @@ abstract class MessageRepository {
     required String name,
     required String type,
     required List<String> userIds,
+    String? avatar,
   });
   Future<List<MessageModel>> getMessages({
     required String conversationId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexcircleuiapp/core/utils/shared_preferences.dart';
 import 'package:nexcircleuiapp/features/messaging/data/datasources/message_remote_datasource.dart';
 import 'package:nexcircleuiapp/features/messaging/data/repositories/message_repository_impl.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/entities/conversation.dart';
@@ -51,12 +52,28 @@ class _ConversationPageState extends State<ConversationPage> {
     final result = await getConversations();
 
     if (!mounted) return;
-
+    final currentUserId = await AppPreferences.getUserId();
     final mapped = result.map((c) {
-      final name = c.displayName;
+      String displayName = c.name ?? '';
+      String displayAvatar = c.avatar ?? '';
 
+      if (c.type == 'private') {
+        final other = c.participants.firstWhere(
+          (p) => p.userId != currentUserId,
+          orElse: () => c.participants.first,
+        );
+
+        displayName = displayName =
+            (other.fullName != null && other.fullName!.trim().isNotEmpty)
+            ? other.fullName!
+            : (other.userName != null && other.userName!.trim().isNotEmpty)
+            ? other.userName!
+            : 'User';
+        displayAvatar = other.avatarUrl ?? '';
+      }
       return {
-        'name': name,
+        'name': displayName,
+        'avatar': displayAvatar,
         'lastMessage': c.lastMessage?.content ?? 'Chưa có tin nhắn',
         'time': 'Now',
         'unread': c.unreadCount,
@@ -90,7 +107,7 @@ class _ConversationPageState extends State<ConversationPage> {
       filteredConversationsUI = [];
 
       for (int i = 0; i < conversations.length; i++) {
-        if (conversations[i].displayName.toLowerCase().contains(
+        if (conversations[i].name!.toLowerCase().contains(
           query.toLowerCase(),
         )) {
           filteredConversations.add(conversations[i]);
@@ -250,8 +267,7 @@ class _ConversationPageState extends State<ConversationPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      ChatPage(conversation: c, friend: null),
+                                  builder: (_) => ChatPage(conversation: c),
                                 ),
                               );
                             },
