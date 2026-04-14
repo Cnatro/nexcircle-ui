@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nexcircleuiapp/core/utils/shared_preferences.dart';
 import 'package:nexcircleuiapp/features/auth/domain/entities/user.dart';
+import 'package:nexcircleuiapp/features/call/data/datasources/call_remote_datasource.dart';
+import 'package:nexcircleuiapp/features/call/data/repositories/call_repository_impl.dart';
+import 'package:nexcircleuiapp/features/call/domain/usecases/initiate_call_usecase.dart';
 import 'package:nexcircleuiapp/features/messaging/data/datasources/message_remote_datasource.dart';
 import 'package:nexcircleuiapp/features/messaging/data/datasources/message_socket_data_source.dart';
 import 'package:nexcircleuiapp/features/messaging/data/repositories/message_repository_impl.dart';
@@ -31,6 +34,7 @@ class _ChatPageState extends State<ChatPage> {
   User currentUserJson = User(id: "", username: "", email: "");
 
   late GetMessagesUseCase getMessagesUseCase;
+  late InitiateCallUseCase initiateCallUseCase;
 
   @override
   void initState() {
@@ -41,9 +45,11 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     final remote = MessageRemoteDataSource();
+    final callRemote = CallRemoteDataSource();
     final repo = MessageRepositoryImpl(socket: socket, remote: remote);
+    final repoCall = CallRepositoryImpl(remote: callRemote);
     getMessagesUseCase = GetMessagesUseCase(repo);
-
+    initiateCallUseCase = InitiateCallUseCase(repoCall);
     loadMessages();
     initSocket();
   }
@@ -205,6 +211,44 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  void startCall(String type) async {
+    final receiverId = getReceiverId();
+
+    if (receiverId.isEmpty) {
+      print("No receiver");
+      return;
+    }
+
+    try {
+      // loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final result = await initiateCallUseCase.call(
+        receiverId: receiverId,
+        type: type,
+      );
+
+      Navigator.pop(context); // tắt loading
+
+      print("Call initiated: ${result.status}");
+
+      // 👉 chuyển sang màn hình call
+      // Navigator.push(context, MaterialPageRoute(...));
+    } catch (e) {
+      Navigator.pop(context);
+
+      print("Call error: $e");
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Call failed")));
+    }
+  }
+
   @override
   void dispose() {
     _sub?.cancel();
@@ -256,6 +300,16 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.call, color: Colors.green),
+            onPressed: () => startCall("AUDIO"),
+          ),
+          IconButton(
+            icon: const Icon(Icons.videocam, color: Colors.blue),
+            onPressed: () => startCall("VIDEO"),
+          ),
+        ],
       ),
       body: Column(
         children: [
