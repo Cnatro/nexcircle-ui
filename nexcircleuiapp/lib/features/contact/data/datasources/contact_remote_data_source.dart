@@ -66,7 +66,7 @@ class ContactRemoteDataSource {
         .map(
           (e) => FriendRequest(
             id: e['id'],
-            senderName: e['senderName'],
+            senderName: e['senderName'] ?? "User",
             senderId: e['senderId'],
             avatarUrl: e['senderAvatar'] ?? '',
             createdAt: e['createdAt'] != null
@@ -126,96 +126,37 @@ class ContactRemoteDataSource {
     await http.patch(
       Uri.parse('$baseUrl/friend-requests/accept'),
       headers: _headers(token),
-      body: jsonEncode({'id': id, 'status': 'accepted' }),
+      body: jsonEncode({'id': id, 'status': 'accepted'}),
     );
   }
+
+  Future<void> removeFriend(String frId) async {
+    final token = await AppPreferences.getToken();
+    if (token == null) return;
+
+    final res = await http.patch(
+      Uri.parse('$baseUrl/friend-ships/$frId/status'),
+      headers: _headers(token),
+      body: jsonEncode({'status': 'unfriended'}),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to remove friend');
+    }
+  }
+
+  Future<void> declineRequest(String requestId) async {
+    final token = await AppPreferences.getToken();
+    if (token == null) return;
+
+    final res = await http.patch(
+      Uri.parse('$baseUrl/friend-requests/decline'),
+      headers: _headers(token),
+      body: jsonEncode({'id': requestId, 'status': 'declined'}),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to remove friend');
+    }
+  }
 }
-
-// import 'dart:async';
-// import 'package:nexcircleuiapp/features/auth/domain/entities/user.dart';
-// import 'package:nexcircleuiapp/features/contact/domain/entities/friend_request.dart';
-// import 'package:nexcircleuiapp/features/contact/domain/entities/friendship.dart';
-
-// class ContactRemoteDataSource {
-//   final String baseUrl;
-
-//   ContactRemoteDataSource({String? baseUrl}) : baseUrl = baseUrl ?? '';
-
-//   /// 🔥 giả lập delay như gọi API
-//   Future<T> _mockDelay<T>(T data) async {
-//     await Future.delayed(const Duration(milliseconds: 500));
-//     return data;
-//   }
-
-//   /// ================= USERS =================
-//   Future<List<User>> getUsers({
-//     required int page,
-//     required int size,
-//   }) async {
-//     return _mockDelay([
-//       User(id: "1", username: "Alice", email: "alice@gmail.com"),
-//       User(id: "2", username: "Bob", email: "bob@gmail.com"),
-//       User(id: "3", username: "Charlie", email: "charlie@gmail.com"),
-//       User(id: "4", username: "David", email: "david@gmail.com"),
-//       User(id: "5", username: "Emma", email: "emma@gmail.com"),
-//     ]);
-//   }
-
-//   /// ================= REQUESTS =================
-//   Future<List<FriendRequest>> getRequests({
-//     required int page,
-//     required int size,
-//     required String receiverId,
-//   }) async {
-//     return _mockDelay([
-//       FriendRequest(
-//         id: "r1",
-//         senderName: "John Doe",
-//         senderId: "10",
-//         avatarUrl: "",
-//         recevierId: receiverId,
-//         status: "pending",
-//       ),
-//       FriendRequest(
-//         id: "r2",
-//         senderName: "Anna Smith",
-//         senderId: "11",
-//         avatarUrl: "",
-//         recevierId: receiverId,
-//         status: "pending",
-//       ),
-//     ]);
-//   }
-
-//   /// ================= FRIENDS =================
-//   Future<List<Friendship>> getFriends({
-//     required int page,
-//     required int size,
-//   }) async {
-//     return _mockDelay([
-//       Friendship(
-//         id: "f1",
-//         fullName: "Michael",
-//         avatarUrl: "",
-//         userId: "20",
-//       ),
-//       Friendship(
-//         id: "f2",
-//         fullName: "Sophia",
-//         avatarUrl: "",
-//         userId: "21",
-//       ),
-//     ]);
-//   }
-
-//   /// ================= ACTION =================
-//   Future<void> sendFriendRequest(String userId) async {
-//     await Future.delayed(const Duration(milliseconds: 300));
-//     print("Mock: send request to $userId");
-//   }
-
-//   Future<void> acceptRequest(String id) async {
-//     await Future.delayed(const Duration(milliseconds: 300));
-//     print("Mock: accepted request $id");
-//   }
-// }

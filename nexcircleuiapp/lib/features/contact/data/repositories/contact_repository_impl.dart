@@ -35,4 +35,16 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<List<Friendship>> getFriends({required int page, required int size}) {
     return remote.getFriends(page: page, size: size);
   }
+
+  @override
+  Future<void> removeFriend(String friendId) {
+    return remote.removeFriend(friendId);
+  }
+  
+  @override
+  Future<void> declineRequest(String requestId) {
+    return remote.declineRequest(requestId);
+  }
+
+  
 }

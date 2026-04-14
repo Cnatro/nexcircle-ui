@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nexcircleuiapp/core/utils/top_snackbar.dart';
 import 'package:nexcircleuiapp/features/contact/data/datasources/contact_remote_data_source.dart';
 import 'package:nexcircleuiapp/features/contact/data/repositories/contact_repository_impl.dart';
 import 'package:nexcircleuiapp/features/contact/domain/entities/friendship.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/get_friends_usecase.dart';
+import 'package:nexcircleuiapp/features/contact/domain/usecases/remove_friend_usecase.dart';
 import 'package:nexcircleuiapp/features/messaging/data/datasources/message_remote_datasource.dart';
 import 'package:nexcircleuiapp/features/messaging/data/repositories/message_repository_impl.dart';
 import 'package:nexcircleuiapp/features/messaging/domain/usecases/create_conversation_usecase.dart';
@@ -22,6 +24,7 @@ class FriendPage extends StatefulWidget {
 class _FriendPageState extends State<FriendPage> {
   late GetFriendsUseCase getFriends;
   late CreateConversationUseCase createConversation;
+  late RemoveFriendUsecase removeFriendUseCase;
 
   List<Map<String, dynamic>> friendsUI = [];
   List<Friendship> friends = [];
@@ -42,6 +45,7 @@ class _FriendPageState extends State<FriendPage> {
 
     getFriends = GetFriendsUseCase(repoContact);
     createConversation = CreateConversationUseCase(repoMessage);
+    removeFriendUseCase = RemoveFriendUsecase(repoContact);
 
     loadData();
   }
@@ -88,140 +92,210 @@ class _FriendPageState extends State<FriendPage> {
             final unread = friend['unread'] as int;
             final hasUnread = unread > 0;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade200,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    final conversation = await createConversation(
-                      name: friends[index].fullName,
-                      type: 'private',
-                      userIds: [friends[index].userId],
-                      avatar: friends[index].avatarUrl,
-                    );
+            return Dismissible(
+              key: Key(friends[index].userId.toString()),
+              direction: DismissDirection.endToStart,
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatPage(conversation: conversation),
-                      ),
-                    );
-                  },
+              /// nền đỏ khi kéo
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red,
                   borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        /// Avatar
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF6366F1).withOpacity(0.8),
-                                const Color(0xFF8B5CF6).withOpacity(0.8),
+                ),
+                child: const Icon(Icons.delete, color: Colors.white),
+              ),
+
+              /// confirm dialog
+              confirmDismiss: (direction) async {
+                final confirm = await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Xác nhận"),
+                    content: const Text("Bạn có muốn hủy kết bạn không?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Hủy"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          "Tiếp tục",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm != true) return false;
+
+                final friend = friends[index];
+
+                try {
+                  await removeFriendUseCase.excuteRemove(friend.id);
+
+                  showTopBanner(
+                    context,
+                    'Đã Hủy kết bạn bạn bè!',
+                    color: Colors.green,
+                  );
+                  return true;
+                } catch (e) {
+                  showTopBanner(
+                    context,
+                    'Hủy kết bạn bạn bè thất bại!',
+                    color: Colors.red,
+                  );
+                  return false;
+                }
+              },
+
+              /// chỉ xoá UI thôi
+              onDismissed: (direction) {
+                setState(() {
+                  friends.removeAt(index);
+                  friendsUI.removeAt(index);
+                });
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade200,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      final conversation = await createConversation(
+                        name: friends[index].fullName,
+                        type: 'private',
+                        userIds: [friends[index].userId],
+                        avatar: friends[index].avatarUrl,
+                      );
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatPage(conversation: conversation),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          /// Avatar
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF6366F1).withOpacity(0.8),
+                                  const Color(0xFF8B5CF6).withOpacity(0.8),
+                                ],
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.transparent,
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 16),
+
+                          /// Content
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        name,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: hasUnread
+                                              ? FontWeight.bold
+                                              : FontWeight.w600,
+                                          color: Colors.grey.shade800,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      time,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  lastMessage,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          child: CircleAvatar(
-                            radius: 28,
-                            backgroundColor: Colors.transparent,
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+
+                          /// Chat button
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              color: const Color(0xFF6366F1),
+                              onPressed: () async {
+                                final friend = friends[index];
+
+                                final conversation = await createConversation(
+                                  name: friend.fullName,
+                                  type: 'private',
+                                  userIds: [friend.userId],
+                                  avatar: friend.avatarUrl,
+                                );
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ChatPage(conversation: conversation),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        ),
-
-                        const SizedBox(width: 16),
-
-                        /// Content
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      name,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: hasUnread
-                                            ? FontWeight.bold
-                                            : FontWeight.w600,
-                                        color: Colors.grey.shade800,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    time,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                lastMessage,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        /// Call button
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.chat_bubble_outline),
-                            color: const Color(0xFF6366F1),
-                            onPressed: () async {
-                              final friend = friends[index];
-
-                              final conversation = await createConversation(
-                                name: friend.fullName,
-                                type: 'private',
-                                userIds: [friend.userId],
-                                avatar: friend.avatarUrl,
-                              );
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ChatPage(conversation: conversation),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

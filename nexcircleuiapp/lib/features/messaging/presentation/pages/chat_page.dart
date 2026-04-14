@@ -48,7 +48,6 @@ class _ChatPageState extends State<ChatPage> {
     initSocket();
   }
 
-  /// Load messages (GIỮ NGUYÊN)
   Future<void> loadMessages() async {
     if (widget.conversation == null) return;
 
@@ -76,7 +75,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  /// Socket init (GIỮ NGUYÊN)
   Future<void> initSocket() async {
     final token = await AppPreferences.getToken();
     final userId = await AppPreferences.getUserId();
@@ -104,10 +102,6 @@ class _ChatPageState extends State<ChatPage> {
       }
     });
   }
-
-  // =========================
-  // ✅ FIX PART: CONVERSATION LOGIC
-  // =========================
 
   String getReceiverId() {
     final participants = widget.conversation?.participants ?? [];
@@ -161,10 +155,6 @@ class _ChatPageState extends State<ChatPage> {
 
     return widget.conversation!.name ?? 'Group';
   }
-
-  // =========================
-  // ✅ FIX SEND MESSAGE
-  // =========================
 
   void sendMessage() async {
     final content = _controller.text.trim();

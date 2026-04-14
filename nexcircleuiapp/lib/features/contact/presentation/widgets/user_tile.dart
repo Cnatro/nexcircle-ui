@@ -26,9 +26,13 @@ class UserTile extends StatelessWidget {
             await sendFriendRequestUseCase.call(reveiverId: user.id);
             onRequestSent?.call();
 
-            showTopBanner(context, 'Đã lưu thành công!', color: Colors.green);
+            showTopBanner(
+              context,
+              'Gửi lời mời thành công!',
+              color: Colors.green,
+            );
           } catch (e) {
-            showTopBanner(context, 'Đã lưu thành công!', color: Colors.red);
+            showTopBanner(context, 'Gửi lời mời thất bại!', color: Colors.red);
           }
         },
         child: const Text("Add"),

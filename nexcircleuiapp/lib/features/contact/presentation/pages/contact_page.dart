@@ -3,6 +3,7 @@ import 'package:nexcircleuiapp/features/auth/domain/entities/user.dart';
 import 'package:nexcircleuiapp/features/contact/data/datasources/contact_remote_data_source.dart';
 import 'package:nexcircleuiapp/features/contact/data/repositories/contact_repository_impl.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/accept_request_usecase.dart';
+import 'package:nexcircleuiapp/features/contact/domain/usecases/decline_request_usecase.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/get_friend_requests_usecase.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/get_users_usecase.dart';
 import 'package:nexcircleuiapp/features/contact/domain/usecases/send_friend_request_usecase.dart';
@@ -24,6 +25,7 @@ class _ContactPageState extends State<ContactPage>
   late GetFriendRequestsUseCase getRequests;
   late SendFriendRequestUseCase sendFriendRequestUseCase;
   late AcceptRequestUseCase acceptRequestUseCase;
+  late DeclineRequestUseCase declineRequestUseCase;
 
   List users = [];
   List requests = [];
@@ -44,6 +46,7 @@ class _ContactPageState extends State<ContactPage>
     getRequests = GetFriendRequestsUseCase(repo);
     sendFriendRequestUseCase = SendFriendRequestUseCase(repo);
     acceptRequestUseCase = AcceptRequestUseCase(repo);
+    declineRequestUseCase = DeclineRequestUseCase(repo);
 
     loadData();
   }
@@ -251,6 +254,13 @@ class _ContactPageState extends State<ContactPage>
                                     request: requests[i],
                                     acceptRequestUseCase: acceptRequestUseCase,
                                     onAccepted: () {
+                                      setState(() {
+                                        requests.removeAt(i);
+                                      });
+                                    },
+                                    declineRequestUseCase:
+                                        declineRequestUseCase,
+                                    onDeclined: () {
                                       setState(() {
                                         requests.removeAt(i);
                                       });
